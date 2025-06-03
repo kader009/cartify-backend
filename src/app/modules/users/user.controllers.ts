@@ -9,7 +9,7 @@ const JWT_secret = config.jwt_token as string;
 
 const registerUser = async (req: Request, res: Response) => {
   const uservalideData = userValidation.omit({ _id: true }).parse(req.body);
-  const { email, password, role } = uservalideData;
+  const { name, email, password, role } = uservalideData;
   try {
     const existUser = await UserServices.registerUser(email);
 
@@ -22,18 +22,17 @@ const registerUser = async (req: Request, res: Response) => {
 
     const userRole = role || 'user';
 
-    const user = await UserServices.createUser(email, password, userRole);
-    
+    const user = await UserServices.createUser(name, email, password, userRole);
+
     res.status(200).json({
       message: 'User created successfully',
       user,
     });
   } catch (error) {
-    // let message = 'Something went wrong';
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         success: false,
-        errors: error.errors, 
+        errors: error.errors,
       });
     }
 

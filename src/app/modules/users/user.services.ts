@@ -5,9 +5,19 @@ const registerUser = async (email: string) => {
   return await User.findOne({ email: email });
 };
 
-const createUser = async (email: string, password: string, role: string) => {
+const createUser = async (
+  name: string,
+  email: string,
+  password: string,
+  role: string,
+) => {
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = await new User({ email, password: hashedPassword, role });
+  const newUser = new User({
+    name,
+    email,
+    password: hashedPassword,
+    role,
+  });
   return await newUser.save();
 };
 
