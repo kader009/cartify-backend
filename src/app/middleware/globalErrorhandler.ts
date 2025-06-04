@@ -16,26 +16,39 @@ interface CustomError extends Partial<MongooseValidationError>, Partial<Mongoose
   statusCode?: number;
 }
 
-const globalErrorHandler: ErrorRequestHandler = (err: CustomError, req, res, next) => { 
-  let statusCode: number = err.statusCode || 500;
-  let message: string = err.message || 'Something went wrong!';
+const globalErrorHandler: ErrorRequestHandler = (err: CustomError, req, res) => {
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Something went wrong!';
   let errorSources: TErrorSources = [];
 
   if (err instanceof ZodError) {
-    const simplifiedError = handleZodError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources;
+    const simplified = handleZodError(err);
+    statusCode = simplified.statusCode;
+    message = simplified.message;
+    errorSources = simplified.errorSources;
   } else if (err.name === 'ValidationError' && err.errors) {
     statusCode = 400;
     message = 'Validation Error';
     errorSources = Object.values(err.errors).map((el) => ({
-      path: el.path || 'unknown',
+      path: el.path || '',
       message: el.message || 'Invalid input',
     }));
   } else if (err.name === 'CastError' && err.path && err.value) {
     statusCode = 400;
     message = `Invalid value for ${err.path}: ${err.value}`;
+    errorSources = [
+      {
+        path: err.path,
+        message: `Invalid value: ${err.value}`,
+      },
+    ];
+  } else {
+    errorSources = [
+      {
+        path: '',
+        message: message,
+      },
+    ];
   }
 
   res.status(statusCode).json({
@@ -45,8 +58,6 @@ const globalErrorHandler: ErrorRequestHandler = (err: CustomError, req, res, nex
     errorSources,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
-
-  next();
 };
 
 export default globalErrorHandler;

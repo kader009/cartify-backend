@@ -5,5 +5,7 @@ export type TUser = {
   name: string;
   email: string;
   password: string;
-  role: string;
+  role: TUserRole;
 };
+
+export type TUserRole = 'customer' | 'admin' | 'seller';
